@@ -14,6 +14,14 @@ import streamlit_authenticator as stauth
 st.set_page_config(
     page_title="3LC"
 )
+hide_st_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            header {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_st_style, unsafe_allow_html=True)
 
 names = ["R&D Lab","Quality Lab"]
 usernames = ["rdlab","qualitylab"]

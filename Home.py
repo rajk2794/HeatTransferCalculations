@@ -3,6 +3,14 @@ import streamlit as st
 st.set_page_config(
     page_title="Home"
 )
+hide_st_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            header {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_st_style, unsafe_allow_html=True)
 
 st.title("Calculations in Heat Transfer")
 st.sidebar.success("Select a :rainbow[calculation] above")
