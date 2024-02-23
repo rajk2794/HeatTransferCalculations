@@ -11,6 +11,7 @@ import pickle
 from pathlib import Path
 import streamlit_authenticator as stauth
 
+
 st.set_page_config(
     page_title="3LC"
 )
@@ -58,11 +59,15 @@ if authentication_status:
     if file  is not None:
 
         try:
-        
+            progress_text = "T-History graph preparation in progress. Please wait..."
+            my_bar = st.progress(0, text=progress_text)
             df1 = pd.read_excel(file, usecols='A:D').round(2)
+            my_bar.progress(25, text=progress_text)
             new_df1 = df1.dropna()
+            my_bar.progress(50, text=progress_text)
                     
             fig = px.line(new_df1,x="Time",y=["Sample","Reference","Air Bath"])
+            my_bar.progress(75, text=progress_text)
             fig.update_layout(
                 title="T-History Graph",
                 xaxis_title="Time in Sec.",
@@ -73,7 +78,9 @@ if authentication_status:
                     color="RebeccaPurple"
                 )
                 )
+            my_bar.progress(100, text=progress_text)
             st.plotly_chart(fig)
+            my_bar.empty()
         except:
             st.write(":red[*Error:* Please upload the correct file. Make sure columns are correctly labeled as 'Time', 'Sample', 'Reference', 'Air Bath' from columns 'A' to 'D'.]")
 
@@ -147,91 +154,99 @@ if authentication_status:
         except:
             sys.exit()
 
-        def area(lst):
-            area_lst = []
-            for num in range(len(lst)):
-                try:
-                    area = ((lst[num] + lst[num+1])*0.05)
-                    area = (round(area, 2))
-                    area_lst.append(area)
-                except:
-                    continue
-            return area_lst
         
-        sample_area = area(sample_temp_list)
-        ref_area = area(ref_temp_list)
-        bath_area = area(bath_temp_list)
-
-        def area_diff(lst1,lst2):
-            area_diff_lst = []
-            for num in range(len(lst1)):
-                try:
-                    diff = lst2[num] - lst1[num]
-                    diff = abs(round(diff,2))
-                    area_diff_lst.append(diff)
-                except:
-                    continue
-            return area_diff_lst
-        
-        sample_area_diff = area_diff(sample_area, bath_area)
-        ref_area_diff = area_diff(ref_area, bath_area)
-
-        final_temp_lst = [i for n, i in enumerate(sample_temp_list) if i not in sample_temp_list[:n]]
-
-        def areaSum(lst1,lst2,lst3):
-            area_sum = {}
-            for i in range(len(lst1)):
-                area_sum[lst1[i]] = 0
-                try:
-                    for j in range(len(lst2)):
-                        if lst2[j] == lst1[i]:
-                            area_sum[lst1[i]] = area_sum[lst1[i]] + lst3[j]
-                            area_sum[lst1[i]] = round(area_sum[lst1[i]],2)
-                except:
-                    continue
-            return area_sum
-        
-        area_sum_sample = areaSum(final_temp_lst,sample_temp_list,sample_area_diff)
-        area_sum_ref = areaSum(final_temp_lst,ref_temp_list,ref_area_diff)
-
-        def sumInt(dic):
-            sum_int = {}
-            for i in dic.keys():
-                k = int(i)        
-                if k in sum_int.keys():
-                    sum_int[k] = sum_int[k] + dic[i] 
-                    sum_int[k] = round(sum_int[k],2)
-                else:
-                    sum_int[k] = dic[i]
-                    sum_int[k] = round(sum_int[k],2)                       
-            return sum_int
-        
-        sample_sum_int = sumInt(area_sum_sample)
-        ref_sum_int = sumInt(area_sum_ref)
-
-        deltaH = {}
-        deltaH_commu = {}
-        sum_enthl = 0
-        for i in sample_sum_int.keys():
-            try:
-                deltaH[i] = ((const1*sample_sum_int[i])/ref_sum_int[i])-const2
-                sum_enthl = sum_enthl + deltaH[i]
-                deltaH_commu[i] = sum_enthl
-            except:
-                continue
-        deltaH_finl = pd.DataFrame(deltaH.items(), columns=['Temp', 'Enthalpy'])
-        deltaH_commu_finl = pd.DataFrame(deltaH_commu.items(), columns=['Temp', 'Commu Enthalpy'])
-        deltaH_finl = deltaH_finl[np.isfinite(deltaH_finl).all(1)]
-        deltaH_commu_finl = deltaH_commu_finl[np.isfinite(deltaH_commu_finl).all(1)]
-        result = pd.merge(deltaH_finl, deltaH_commu_finl, on = 'Temp')
-
-        input_values_finl = pd.DataFrame(input_values.items(), columns=['Input Description', 'Value'])
-            
-        output_data = new_df1.join(input_values_finl)
-        output_data_finl = output_data.join(result)
         
 
         if st.button('Show Enthalpy Data'):
+            progress_text = "Enthalpy calculation in progress. Please wait..."
+            my_bar = st.progress(0, text=progress_text)
+            def area(lst):
+                area_lst = []
+                for num in range(len(lst)):
+                    try:
+                        area = ((lst[num] + lst[num+1])*0.05)
+                        area = (round(area, 2))
+                        area_lst.append(area)
+                    except:
+                        continue
+                return area_lst
+            
+            sample_area = area(sample_temp_list)
+            ref_area = area(ref_temp_list)
+            bath_area = area(bath_temp_list)
+            my_bar.progress(20, text=progress_text)
+
+            def area_diff(lst1,lst2):
+                area_diff_lst = []
+                for num in range(len(lst1)):
+                    try:
+                        diff = lst2[num] - lst1[num]
+                        diff = abs(round(diff,2))
+                        area_diff_lst.append(diff)
+                    except:
+                        continue
+                return area_diff_lst
+            
+            sample_area_diff = area_diff(sample_area, bath_area)
+            ref_area_diff = area_diff(ref_area, bath_area)
+
+            final_temp_lst = [i for n, i in enumerate(sample_temp_list) if i not in sample_temp_list[:n]]
+            my_bar.progress(40, text=progress_text)
+
+            def areaSum(lst1,lst2,lst3):
+                area_sum = {}
+                for i in range(len(lst1)):
+                    area_sum[lst1[i]] = 0
+                    try:
+                        for j in range(len(lst2)):
+                            if lst2[j] == lst1[i]:
+                                area_sum[lst1[i]] = area_sum[lst1[i]] + lst3[j]
+                                area_sum[lst1[i]] = round(area_sum[lst1[i]],2)
+                    except:
+                        continue
+                return area_sum
+            
+            area_sum_sample = areaSum(final_temp_lst,sample_temp_list,sample_area_diff)
+            area_sum_ref = areaSum(final_temp_lst,ref_temp_list,ref_area_diff)
+            my_bar.progress(60, text=progress_text)
+
+            def sumInt(dic):
+                sum_int = {}
+                for i in dic.keys():
+                    k = int(i)        
+                    if k in sum_int.keys():
+                        sum_int[k] = sum_int[k] + dic[i] 
+                        sum_int[k] = round(sum_int[k],2)
+                    else:
+                        sum_int[k] = dic[i]
+                        sum_int[k] = round(sum_int[k],2)                       
+                return sum_int
+            
+            sample_sum_int = sumInt(area_sum_sample)
+            ref_sum_int = sumInt(area_sum_ref)
+            my_bar.progress(80, text=progress_text)
+            deltaH = {}
+            deltaH_commu = {}
+            sum_enthl = 0
+            for i in sample_sum_int.keys():
+                try:
+                    deltaH[i] = ((const1*sample_sum_int[i])/ref_sum_int[i])-const2
+                    sum_enthl = sum_enthl + deltaH[i]
+                    deltaH_commu[i] = sum_enthl
+                except:
+                    continue
+            deltaH_finl = pd.DataFrame(deltaH.items(), columns=['Temp', 'Enthalpy'])
+            deltaH_commu_finl = pd.DataFrame(deltaH_commu.items(), columns=['Temp', 'Commu Enthalpy'])
+            deltaH_finl = deltaH_finl[np.isfinite(deltaH_finl).all(1)]
+            deltaH_commu_finl = deltaH_commu_finl[np.isfinite(deltaH_commu_finl).all(1)]
+            result = pd.merge(deltaH_finl, deltaH_commu_finl, on = 'Temp')
+
+            input_values_finl = pd.DataFrame(input_values.items(), columns=['Input Description', 'Value'])
+                
+            output_data = new_df1.join(input_values_finl)
+            output_data_finl = output_data.join(result)
+            my_bar.progress(90, text=progress_text)
+
             fig = make_subplots(specs=[[{"secondary_y": True}]])
             fig.add_trace(
                 go.Bar(x=result["Temp"], y=result["Enthalpy"], name="Enthalpy"),
@@ -247,8 +262,9 @@ if authentication_status:
             fig.update_xaxes(title_text="Temperature in degree C")
             fig.update_yaxes(title_text="Enthalpy in J/g", secondary_y=False)
             fig.update_yaxes(title_text="Commulative Enthalpy in J/g", secondary_y=True)
-
+            my_bar.progress(100, text=progress_text)
             st.plotly_chart(fig)
+            my_bar.empty()
             
             def to_excel(df):
                 output = BytesIO()
