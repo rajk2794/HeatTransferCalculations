@@ -53,7 +53,7 @@ if authentication_status:
     st.sidebar.title(f"Welcome {name}")
 
     file = st.file_uploader("Upload 3LC raw file",type=["xlsx"])
-
+    st.download_button(label="Download template file", data=open('template_file.xlsx', 'rb').read(), file_name='template_file.xlsx',mime='xlsx')
     cp_values = {'Water':4.18,'IPA':2.0}
     input_values = {}
     if file  is not None:
