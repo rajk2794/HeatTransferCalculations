@@ -58,7 +58,9 @@ if authentication_status:
     if file  is not None:
         
         df1 = pd.read_excel(file, usecols='A:D').round(2)
+        st.write(df1)
         new_df1 = df1.dropna()
+        st.write(new_df1)
         
         fig = px.line(new_df1,x="Time",y=["Sample","Reference","Air Bath"])
         fig.update_layout(
