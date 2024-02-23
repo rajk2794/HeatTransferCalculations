@@ -56,25 +56,24 @@ if authentication_status:
     cp_values = {'Water':4.18,'IPA':2.0}
     input_values = {}
     if file  is not None:
-        try:
-
-            df1 = pd.read_excel(file, usecols='A:D').round(2)
-            new_df1 = df1.dropna()
-            
-            fig = px.line(new_df1,x="Time",y=["Sample","Reference","Air Bath"])
-            fig.update_layout(
-                title="T-History Graph",
-                xaxis_title="Time in Sec.",
-                yaxis_title="Temperature in degree C",
-                    font=dict(
-                    family="Courier New, monospace",
-                    size=18,
-                    color="RebeccaPurple"
-                )
-                )
-            st.plotly_chart(fig)
-        except:
-            st.write(":red[*Error:* Please upload the correct file. Make sure columns are correctly labeled as 'Time', 'Sample', 'Reference', 'Air Bath' from columns 'A' to 'D'.]")
+        
+        df1 = pd.read_excel(file, usecols='A:D').round(2)
+        new_df1 = df1.dropna()
+        
+        fig = px.line(new_df1,x="Time",y=["Sample","Reference","Air Bath"])
+        fig.update_layout(
+            title="T-History Graph",
+            xaxis_title="Time in Sec.",
+            yaxis_title="Temperature in degree C",
+                font=dict(
+                family="Courier New, monospace",
+                size=18,
+                color="RebeccaPurple"
+            )
+            )
+        st.plotly_chart(fig)
+        #except:
+            #st.write(":red[*Error:* Please upload the correct file. Make sure columns are correctly labeled as 'Time', 'Sample', 'Reference', 'Air Bath' from columns 'A' to 'D'.]")
 
         col1, col2 = st.columns(2)
         
