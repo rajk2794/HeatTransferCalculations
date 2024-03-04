@@ -281,7 +281,7 @@ if authentication_status:
             df_xlsx = to_excel(output_data_finl)
             st.download_button(label='📥 Download Input and Output Data',
                                             data=df_xlsx ,
-                                            file_name= 'output_data.xlsx')
+                                            file_name= '{}_3LC_data.xlsx'.format(SamNam))
 
 
 
