@@ -11,7 +11,6 @@ import pickle
 from pathlib import Path
 import streamlit_authenticator as stauth
 
-
 st.set_page_config(
     page_title="3LC"
 )
@@ -54,8 +53,7 @@ if authentication_status:
 
     file = st.file_uploader("Upload 3LC raw file",type=["xlsx"])
     st.download_button(label="Download template file", data=open('template_file.xlsx', 'rb').read(), file_name='template_file.xlsx',mime='xlsx')
-    cp_values = {'Water':4.18,'IPA':2.0}
-    input_values = {}
+    
     if file  is not None:
 
         try:
@@ -82,7 +80,40 @@ if authentication_status:
             st.plotly_chart(fig)
             my_bar.empty()
         except:
-            st.write(":red[*Error:* Please upload the correct file. Make sure columns are correctly labeled as 'Time', 'Sample', 'Reference', 'Air Bath' from columns 'A' to 'D'.]")
+            st.error("Please upload the correct file. Make sure columns are correctly labeled as 'Time', 'Sample', 'Reference', 'Air Bath' from columns 'A' to 'D'.")
+
+        try:
+            df3 = new_df1["Sample"]
+        except:
+            sys.exit()
+        try:
+            for i in range(int(len(df3))):
+            
+                x = new_df1["Time"][i:i+100]
+                y = new_df1["Sample"][i:i+100]
+                slope_intercept = np.polyfit(x,y,1)
+                #st.write(new_df1["Time"][i],slope_intercept[0].round(1))
+
+                if slope_intercept[0].round(1) == 0.0:
+                    pc_temp = new_df1["Sample"][i].round(1)
+                    st.write("Phase change temperature of the sample is:",pc_temp)
+                    break
+        except:
+            st.write("There is an error in phase change temp calculation")
+
+        C1 = 471710
+        C2 = -4172.1
+        C3 = 14.745
+        C4 = -0.0144
+        mmIPA = 60.096
+
+        tmpK = pc_temp + 273.15
+        spHeat1 = C1+(C2*tmpK)+(C3*tmpK**2)+(C4*tmpK**3) #J/Kmol.K
+        spHeat2 = spHeat1/(mmIPA*1000) #KJ/kg.K
+
+        cp_values = {'Water':4.18,'IPA':spHeat2.round(2)}
+        input_values = {}      
+
 
         col1, col2 = st.columns(2)
         
@@ -155,9 +186,18 @@ if authentication_status:
             sys.exit()
 
         
-        
 
-        if st.button('Show Enthalpy Data'):
+        #if st.button('Show Enthalpy Data'):
+            
+        if 'clicked' not in st.session_state:
+            st.session_state.clicked = False
+
+        def click_button():
+            st.session_state.clicked = True
+
+        st.button('Calculate Enthalpy Data', on_click=click_button)
+
+        if st.session_state.clicked:
             progress_text = "Enthalpy calculation in progress. Please wait..."
             my_bar = st.progress(0, text=progress_text)
             def area(lst):
@@ -236,24 +276,66 @@ if authentication_status:
                 except:
                     continue
             deltaH_finl = pd.DataFrame(deltaH.items(), columns=['Temp', 'Enthalpy'])
+            maxEnthValue = deltaH_finl['Enthalpy'].idxmax()
+            
+            tempclmn = deltaH_finl['Temp']
+            tempMaxEnthalpy = tempclmn[maxEnthValue].round(0)
+            
+            col1, col2 = st.columns(2)
+
+            with col1:
+
+                strtTemp = st.number_input(":blue[**Enter start temp for enthalpy graph**]",value=tempMaxEnthalpy-5)
+                st.markdown('*Start temperature is {}.*'.format(strtTemp))
+                
+        
+            with col2:
+
+                stpTemp = st.number_input(":blue[**Enter end temp for enthalpy graph**]",value=tempMaxEnthalpy+5)
+                st.markdown('*End temperature is {}.*'.format(stpTemp))
+                
+            
+            deltaH_range = {}
+            commu_deltaH_range = {}
+            sum_deltaH_range = 0
+            
+            for i in range(int(strtTemp),int(stpTemp+1)):
+                try:
+                    
+                    tempclmn1 = deltaH[i]
+                    sum_deltaH_range = sum_deltaH_range + deltaH[i]
+                    deltaH_range[i] = tempclmn1
+                    commu_deltaH_range[i] = sum_deltaH_range
+                    
+                except:
+                    continue
+
+            sum_deltaH_range_r = sum_deltaH_range
+            st.markdown('Total enthalpy from temp {} to temp {} is {}.'.format(strtTemp, stpTemp,sum_deltaH_range_r))
+
+            deltaH_range_finl = pd.DataFrame(deltaH_range.items(), columns=['Temp_range', 'Enthalpy_range'])
+            deltaH_range_finl = deltaH_range_finl[np.isfinite(deltaH_range_finl).all(1)]
+            deltaH_range_commu_finl = pd.DataFrame(commu_deltaH_range.items(), columns=['Temp_range', 'Commu Enthalpy_range'])
+            deltaH_range_commu_finl = deltaH_range_commu_finl[np.isfinite(deltaH_range_commu_finl).all(1)]
             deltaH_commu_finl = pd.DataFrame(deltaH_commu.items(), columns=['Temp', 'Commu Enthalpy'])
             deltaH_finl = deltaH_finl[np.isfinite(deltaH_finl).all(1)]
             deltaH_commu_finl = deltaH_commu_finl[np.isfinite(deltaH_commu_finl).all(1)]
             result = pd.merge(deltaH_finl, deltaH_commu_finl, on = 'Temp')
-
+            output_data_range = pd.merge(deltaH_range_finl,deltaH_range_commu_finl, on = 'Temp_range')
+                        
             input_values_finl = pd.DataFrame(input_values.items(), columns=['Input Description', 'Value'])
-                
             output_data = new_df1.join(input_values_finl)
-            output_data_finl = output_data.join(result)
+            output_data1 = result.join(output_data_range)
+            output_data_finl = output_data.join(output_data1)
             my_bar.progress(90, text=progress_text)
 
             fig = make_subplots(specs=[[{"secondary_y": True}]])
             fig.add_trace(
-                go.Bar(x=result["Temp"], y=result["Enthalpy"], name="Enthalpy"),
+                go.Bar(x=deltaH_range_finl["Temp_range"], y=deltaH_range_finl["Enthalpy_range"], name="Enthalpy_range"),
                 secondary_y=False,
             )
             fig.add_trace(
-                go.Scatter(x=result["Temp"], y=result['Commu Enthalpy'], name="Commu Enthalpy"),
+                go.Scatter(x=deltaH_range_commu_finl["Temp_range"], y=deltaH_range_commu_finl['Commu Enthalpy_range'], name="Commu Enthalpy_range"),
                 secondary_y=True,
             )
             fig.update_layout(
@@ -264,6 +346,22 @@ if authentication_status:
             fig.update_yaxes(title_text="Commulative Enthalpy in J/g", secondary_y=True)
             my_bar.progress(100, text=progress_text)
             st.plotly_chart(fig)
+
+            fig = make_subplots(specs=[[{"secondary_y": True}]])
+            fig.add_trace(
+                go.Bar(x=result["Temp"], y=result["Enthalpy"], name="Enthalpy"),
+                secondary_y=False,
+            )
+            
+            fig.update_layout(
+                title_text="Overall Enthalpy Graph"
+            )
+            fig.update_xaxes(title_text="Temperature in degree C")
+            fig.update_yaxes(title_text="Enthalpy in J/g", secondary_y=False)
+            fig.update_yaxes(title_text="Commulative Enthalpy in J/g", secondary_y=True)
+            my_bar.progress(100, text=progress_text)
+            st.plotly_chart(fig)
+
             my_bar.empty()
             
             def to_excel(df):
