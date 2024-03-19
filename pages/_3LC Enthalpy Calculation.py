@@ -89,8 +89,8 @@ if authentication_status:
         try:
             for i in range(int(len(df3))):
             
-                x = new_df1["Time"][i:i+100]
-                y = new_df1["Sample"][i:i+100]
+                x = new_df1["Time"][i:i+50]
+                y = new_df1["Sample"][i:i+50]
                 slope_intercept = np.polyfit(x,y,1)
                 #st.write(new_df1["Time"][i],slope_intercept[0].round(1))
 
@@ -276,11 +276,12 @@ if authentication_status:
                 except:
                     continue
             deltaH_finl = pd.DataFrame(deltaH.items(), columns=['Temp', 'Enthalpy'])
-            maxEnthValue = deltaH_finl['Enthalpy'].idxmax()
-            
+            maxEnthValue = deltaH_finl['Enthalpy'].max()
+            index = deltaH_finl[deltaH_finl['Enthalpy']==maxEnthValue].index.values
+                        
             tempclmn = deltaH_finl['Temp']
-            tempMaxEnthalpy = tempclmn[maxEnthValue].round(0)
-            
+            tempMaxEnthalpy = int(tempclmn[index])
+                       
             col1, col2 = st.columns(2)
 
             with col1:
