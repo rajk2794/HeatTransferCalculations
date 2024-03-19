@@ -276,9 +276,9 @@ if authentication_status:
                 except:
                     continue
             deltaH_finl = pd.DataFrame(deltaH.items(), columns=['Temp', 'Enthalpy'])
+            deltaH_finl = deltaH_finl[deltaH_finl.replace([np.inf, -np.inf], np.nan).notnull().all(axis=1)]
             maxEnthValue = deltaH_finl['Enthalpy'].max()
             index = deltaH_finl[deltaH_finl['Enthalpy']==maxEnthValue].index.values
-                        
             tempclmn = deltaH_finl['Temp']
             tempMaxEnthalpy = int(tempclmn[index])
                        
