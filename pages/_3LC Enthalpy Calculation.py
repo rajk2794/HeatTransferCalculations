@@ -311,7 +311,7 @@ if authentication_status:
                 except:
                     continue
 
-            sum_deltaH_range_r = sum_deltaH_range
+            sum_deltaH_range_r = int(sum_deltaH_range)
             st.markdown('Total enthalpy from temp {} to temp {} is {}.'.format(strtTemp, stpTemp,sum_deltaH_range_r))
 
             deltaH_range_finl = pd.DataFrame(deltaH_range.items(), columns=['Temp_range', 'Enthalpy_range'])
