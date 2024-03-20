@@ -115,7 +115,7 @@ if authentication_status:
         spHeat1 = C1+(C2*tmpK)+(C3*tmpK**2)+(C4*tmpK**3) #J/Kmol.K
         spHeat2 = spHeat1/(mmIPA*1000) #KJ/kg.K
 
-        cp_values = {'Water':4.18,'IPA':spHeat2.round(2)}
+        cp_values = {'Water':4.18,'IPA':spHeat2.round(2),'Olive Oil':1.32}
         input_values = {}      
 
 
