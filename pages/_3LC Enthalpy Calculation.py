@@ -84,22 +84,26 @@ if authentication_status:
 
         try:
             df3 = new_df1["Sample"]
+            minTmp = df3.min()
+            maxTmp = df3.max()
+            avgtmpSample = (minTmp+maxTmp)/2
+            
         except:
             sys.exit()
-        try:
-            for i in range(int(len(df3))):
+        #try:
+            #for i in range(int(len(df3))):
             
-                x = new_df1["Time"][i:i+50]
-                y = new_df1["Sample"][i:i+50]
-                slope_intercept = np.polyfit(x,y,1)
+                #x = new_df1["Time"][i:i+50]
+                #y = new_df1["Sample"][i:i+50]
+                #slope_intercept = np.polyfit(x,y,1)
                 #st.write(new_df1["Time"][i],slope_intercept[0].round(1))
 
-                if slope_intercept[0].round(1) == 0.0:
-                    pc_temp = new_df1["Sample"][i].round(1)
-                    st.write("Phase change temperature of the sample is:",pc_temp)
-                    break
-        except:
-            st.write("There is an error in phase change temp calculation")
+                #if slope_intercept[0].round(1) == 0.0:
+                    #pc_temp = new_df1["Sample"][i].round(1)
+                    #st.write("Phase change temperature of the sample is:",pc_temp)
+                    #break
+        #except:
+            #st.write("There is an error in phase change temp calculation")
 
         C1 = 471710
         C2 = -4172.1
@@ -107,7 +111,7 @@ if authentication_status:
         C4 = -0.0144
         mmIPA = 60.096
 
-        tmpK = pc_temp + 273.15
+        tmpK = avgtmpSample + 273.15
         spHeat1 = C1+(C2*tmpK)+(C3*tmpK**2)+(C4*tmpK**3) #J/Kmol.K
         spHeat2 = spHeat1/(mmIPA*1000) #KJ/kg.K
 
