@@ -118,7 +118,6 @@ if authentication_status:
                 for num in range(len(lst)):
                     try:
                         area = abs(((lst[num] + lst[num+1])*0.5)/WtSam)
-                        area = (round(area, 2))
                         area_lst.append(area)
                     except:
                         continue
@@ -139,7 +138,7 @@ if authentication_status:
                         for j in range(len(lst2)):
                             if lst2[j] == lst1[i]:
                                 area_sum[lst1[i]] = (area_sum[lst1[i]] + lst3[j])
-                                area_sum[lst1[i]] = round(area_sum[lst1[i]],2)
+                                #area_sum[lst1[i]] = round(area_sum[lst1[i]],2)
                     except:
                         continue
                 return area_sum
