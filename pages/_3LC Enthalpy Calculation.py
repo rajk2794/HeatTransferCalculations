@@ -275,12 +275,18 @@ if authentication_status:
             for i in sample_sum_int.keys():
                 try:
                     deltaH[i] = ((const1*sample_sum_int[i])/ref_sum_int[i])-const2
-                    sum_enthl = sum_enthl + deltaH[i]
-                    deltaH_commu[i] = sum_enthl
+                    if deltaH[i] != np.inf:
+                        sum_enthl = sum_enthl + deltaH[i]
+                        deltaH_commu[i] = sum_enthl
+                    else:
+                        continue
                 except:
                     continue
             deltaH_finl = pd.DataFrame(deltaH.items(), columns=['Temp', 'Enthalpy'])
             deltaH_finl = deltaH_finl[deltaH_finl.replace([np.inf, -np.inf], np.nan).notnull().all(axis=1)]
+            deltaH_commu_finl = pd.DataFrame(deltaH_commu.items(), columns=['Temp', 'Commu Enthalpy'])
+            deltaH_commu_finl = deltaH_commu_finl[deltaH_commu_finl.replace([np.inf, -np.inf], np.nan).notnull().all(axis=1)]
+            
             maxEnthValue = deltaH_finl['Enthalpy'].max()
             index = deltaH_finl[deltaH_finl['Enthalpy']==maxEnthValue].index.values
             tempclmn = deltaH_finl['Temp']
@@ -299,7 +305,6 @@ if authentication_status:
                 stpTemp = st.number_input(":blue[**Enter end temp for enthalpy graph**]",value=tempMaxEnthalpy+5)
                 st.markdown('*End temperature is {}.*'.format(stpTemp))
                 
-            
             deltaH_range = {}
             commu_deltaH_range = {}
             sum_deltaH_range = 0
@@ -322,7 +327,7 @@ if authentication_status:
             deltaH_range_finl = deltaH_range_finl[np.isfinite(deltaH_range_finl).all(1)]
             deltaH_range_commu_finl = pd.DataFrame(commu_deltaH_range.items(), columns=['Temp_range', 'Commu Enthalpy_range'])
             deltaH_range_commu_finl = deltaH_range_commu_finl[np.isfinite(deltaH_range_commu_finl).all(1)]
-            deltaH_commu_finl = pd.DataFrame(deltaH_commu.items(), columns=['Temp', 'Commu Enthalpy'])
+            
             deltaH_finl = deltaH_finl[np.isfinite(deltaH_finl).all(1)]
             deltaH_commu_finl = deltaH_commu_finl[np.isfinite(deltaH_commu_finl).all(1)]
             result = pd.merge(deltaH_finl, deltaH_commu_finl, on = 'Temp')
